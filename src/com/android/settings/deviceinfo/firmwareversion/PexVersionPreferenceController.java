@@ -16,15 +16,23 @@
 package com.android.settings.deviceinfo.firmwareversion;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.SystemProperties;
 import android.text.TextUtils;
+import android.util.Log;
+import android.view.View;
+
+import androidx.preference.Preference;
 
 import com.android.settings.R;
 import com.android.settings.core.BasePreferenceController;
-
 public class PexVersionPreferenceController extends BasePreferenceController {
 
+    private static final Uri INTENT_URI_DATA = Uri.parse("https://github.com/PixelExtended/OTA/blob/eleven/changelog.md");
     private static final String PROPERTY_PEX_VERSION = "org.pex.version";
+    private final PackageManager mPackageManager = this.mContext.getPackageManager();
 
     public PexVersionPreferenceController(Context context, String key) {
         super(context, key);
@@ -40,5 +48,20 @@ public class PexVersionPreferenceController extends BasePreferenceController {
     public CharSequence getSummary() {
         return SystemProperties.get(PROPERTY_PEX_VERSION,
                 mContext.getString(R.string.unknown));
+    }
+
+    public boolean handlePreferenceTreeClick(Preference preference) {
+        if (!TextUtils.equals(preference.getKey(), getPreferenceKey())) {
+            return false;
+        }
+        Intent intent = new Intent();
+        intent.setAction("android.intent.action.VIEW");
+        intent.setData(INTENT_URI_DATA);
+        if (this.mPackageManager.queryIntentActivities(intent, 0).isEmpty()) {
+            Log.w(TAG, "queryIntentActivities() returns empty");
+            return true;
+        }
+        this.mContext.startActivity(intent);
+        return true;
     }
 }
